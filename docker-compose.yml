@@ -7,11 +7,20 @@ services:
       PORT: 8080
       BOINC_CONTAINER: boinc-lab
       LCD_ENABLED: "true"
-      LCD_SERIAL_PORT: /dev/ttyUSB0
+      LCD_SERIAL_PORT: /dev/ttyACM0
       LCD_BAUD_RATE: 9600
+      LCD_PAGE_DURATION_MS: 5000
+      LCD_LONG_PAGE_DURATION_MS: 10000
+      ALERT_DISK_PCT: 90
+      ALERT_CPU_PCT: 95
+      ALERT_CPU_SUSTAINED_MS: 300000
+      HOST_ROOT_PATH: /host
     ports:
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      # Solo lectura. Necesario para que "df" reporte el disco REAL del host y no
+      # el filesystem interno (overlay) del contenedor, que no sirve de nada.
+      - /:/host:ro
     devices:
-      - "/dev/ttyUSB0:/dev/ttyUSB0"
+      - "/dev/ttyACM0:/dev/ttyACM0"

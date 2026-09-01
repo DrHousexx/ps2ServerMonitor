@@ -70,7 +70,8 @@ export async function getProjectStatus() {
   return {
     project: raw.match(/name:\s*(.+)/)?.[1]?.trim() ?? null,
     user: raw.match(/user_name:\s*(.+)/)?.[1]?.trim() ?? null,
-    userTotalCredit: Number(raw.match(/user_total_credit:\s*([0-9.]+)/)?.[1] ?? 0)
+    userTotalCredit: Number(raw.match(/user_total_credit:\s*([0-9.]+)/)?.[1] ?? 0),
+    userRac: Number(raw.match(/user_expavg_credit:\s*([0-9.]+)/)?.[1] ?? 0)
   };
 }
 

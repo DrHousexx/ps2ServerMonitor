@@ -1,0 +1,12 @@
+services:
+  ps2-monitor:
+    build: .
+    container_name: ps2-monitor
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+      BOINC_CONTAINER: boinc-lab
+    ports:
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock

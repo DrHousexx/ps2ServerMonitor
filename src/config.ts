@@ -5,5 +5,6 @@ export const config = {
     enabled: (process.env.LCD_ENABLED ?? "true") === "true",
     port: process.env.LCD_SERIAL_PORT ?? "/dev/ttyUSB0",
     baudRate: Number(process.env.LCD_BAUD_RATE ?? 9600),
+    refreshIntervalMs: Number(process.env.LCD_REFRESH_INTERVAL_MS ?? 6000),
   },
 };

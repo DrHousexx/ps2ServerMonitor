@@ -12,10 +12,12 @@ let elapsedInPage = 0;
 let elapsedSinceRefresh = 0;
 let elapsedSinceAlertCheck = 0;
 let inAlert = false;
+let tickInProgress = false;
 let timer: NodeJS.Timeout | null = null;
 
 async function showCurrentPage(): Promise<void> {
   const page = pages[pageIndex];
+  console.log(`[LCD poller] -> pagina "${page.id}"`);
   try {
     const content = await page.build();
     await writeLines(content);
@@ -25,46 +27,57 @@ async function showCurrentPage(): Promise<void> {
 }
 
 async function tick(): Promise<void> {
-  if (!isLcdReady()) return;
+  // Si el tick anterior todavia esta corriendo (ej. boinccmd tardo mas de 1s),
+  // nos salteamos este para no pisar el estado compartido (pageIndex, elapsedInPage, etc).
+  if (tickInProgress) return;
+  tickInProgress = true;
 
-  elapsedSinceAlertCheck += TICK_MS;
-  if (elapsedSinceAlertCheck >= ALERT_CHECK_MS) {
-    elapsedSinceAlertCheck = 0;
-    const alert = await checkAlerts().catch(() => null);
+  try {
+    if (!isLcdReady()) return;
 
-    if (alert) {
-      inAlert = true;
-      await writeLines(buildAlertPage(alert.title, alert.detail));
-      return; // mientras hay alerta activa, la rotacion normal queda pausada
+    elapsedSinceAlertCheck += TICK_MS;
+    if (elapsedSinceAlertCheck >= ALERT_CHECK_MS) {
+      elapsedSinceAlertCheck = 0;
+      const alert = await checkAlerts().catch(() => null);
+
+      if (alert) {
+        inAlert = true;
+        console.log(`[LCD poller] ALERTA: ${alert.title} / ${alert.detail}`);
+        await writeLines(buildAlertPage(alert.title, alert.detail));
+        return; // mientras hay alerta activa, la rotacion normal queda pausada
+      }
+
+      if (inAlert) {
+        // la alerta se resolvio: volvemos a la rotacion normal desde donde estaba
+        console.log("[LCD poller] Alerta resuelta, retomando rotacion normal");
+        inAlert = false;
+        elapsedInPage = 0;
+        elapsedSinceRefresh = 0;
+        await showCurrentPage();
+        return;
+      }
     }
 
-    if (inAlert) {
-      // la alerta se resolvio: volvemos a la rotacion normal desde donde estaba
-      inAlert = false;
+    if (inAlert) return;
+
+    const page = pages[pageIndex];
+    elapsedInPage += TICK_MS;
+    elapsedSinceRefresh += TICK_MS;
+
+    if (elapsedInPage >= page.durationMs) {
+      pageIndex = (pageIndex + 1) % pages.length;
       elapsedInPage = 0;
       elapsedSinceRefresh = 0;
       await showCurrentPage();
       return;
     }
-  }
 
-  if (inAlert) return;
-
-  const page = pages[pageIndex];
-  elapsedInPage += TICK_MS;
-  elapsedSinceRefresh += TICK_MS;
-
-  if (elapsedInPage >= page.durationMs) {
-    pageIndex = (pageIndex + 1) % pages.length;
-    elapsedInPage = 0;
-    elapsedSinceRefresh = 0;
-    await showCurrentPage();
-    return;
-  }
-
-  if (elapsedSinceRefresh >= page.refreshMs) {
-    elapsedSinceRefresh = 0;
-    await showCurrentPage();
+    if (elapsedSinceRefresh >= page.refreshMs) {
+      elapsedSinceRefresh = 0;
+      await showCurrentPage();
+    }
+  } finally {
+    tickInProgress = false;
   }
 }
 

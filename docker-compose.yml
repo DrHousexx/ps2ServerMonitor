@@ -6,7 +6,12 @@ services:
     environment:
       PORT: 8080
       BOINC_CONTAINER: boinc-lab
+      LCD_ENABLED: "true"
+      LCD_SERIAL_PORT: /dev/ttyUSB0
+      LCD_BAUD_RATE: 9600
     ports:
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"

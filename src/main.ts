@@ -1,6 +1,8 @@
 import express from "express";
 import { config } from "./config.js";
 import { statusRouter } from "./routes/status.routes.js";
+import { lcdRouter } from "./routes/lcd.routes.js";
+import { initLcd } from "./services/lcd.service.js";
 
 const app = express();
 app.use(express.json());
@@ -10,6 +12,9 @@ app.get("/health", (_req, res) =>
 );
 
 app.use("/api/v1", statusRouter);
+app.use("/api/v1", lcdRouter);
+
+initLcd();
 
 app.listen(config.port, "0.0.0.0", () =>
   console.log(`PS2 Monitor listening on :${config.port}`)

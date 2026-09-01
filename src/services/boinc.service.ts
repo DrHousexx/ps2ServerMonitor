@@ -59,9 +59,9 @@ export async function getTasks() {
 export async function getClientStatus() {
   const raw = await boinccmd(["--get_cc_status"]);
   return {
-    cpuSuspended: /CPU status\s+\n\s+not suspended/.test(raw) === false,
-    gpuSuspended: /GPU status\s+\n\s+not suspended/.test(raw) === false,
-    networkSuspended: /Network status\s+\n\s+not suspended/.test(raw) === false
+    cpuSuspended: /CPU status\s+not suspended/.test(raw) === false,
+    gpuSuspended: /GPU status\s+not suspended/.test(raw) === false,
+    networkSuspended: /Network status\s+not suspended/.test(raw) === false
   };
 }
 
